@@ -16,7 +16,7 @@ media
 .idea/**/usage.statistics.xml
 .idea/**/dictionaries
 .idea/**/shelf
-
+.idea
 # AWS User-specific
 .idea/**/aws.xml
 
@@ -144,3 +144,4 @@ GitHub.sublime-settings
 .Trashes
 ehthumbs.db
 Thumbs.db
+
