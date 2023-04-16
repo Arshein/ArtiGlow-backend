@@ -22,20 +22,21 @@ class PostSerializer(ModelSerializer):
         # set post owner
         validated_data['owner'] = self.context['request'].user
 
-        # generate image from prompt
         try:
+            # generate image from prompt
             image_url = gen_image(validated_data['description'])
+
+            # download and save image temporarily
+            r = requests.get(image_url)
+            if r.status_code == 200:
+                img_temp = NamedTemporaryFile(delete=True)
+                img_temp.write(r.content)
+                img_temp.flush()
+            else:
+                raise Exception(f'could not download image at {image_url}')
+
         except Exception as e:
             raise serializers.ValidationError(f"An error occurred while generating the image: {e}")
-
-        # download and save image temporarily
-        r = requests.get(image_url)
-        if r.status_code == 200:
-            img_temp = NamedTemporaryFile(delete=True)
-            img_temp.write(r.content)
-            img_temp.flush()
-        else:
-            raise serializers.ValidationError(f"An error occurred while generating the image: could not download image at {image_url}")
 
         # save post with image
         post_obj = Post.objects.create(**validated_data)
