@@ -4,10 +4,15 @@ from rest_framework.viewsets import ModelViewSet
 from .models import Post
 from posts.serializer import PostSerializer
 
+from rest_framework import filters
+
 
 class PostViewSet(ModelViewSet):
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['description']
 
     def get_queryset(self):
         user = self.request.user
