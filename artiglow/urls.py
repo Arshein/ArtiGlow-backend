@@ -23,7 +23,7 @@ import debug_toolbar
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls')),
-    path('auth/', include('accounts.urls')),
+    path('', include('accounts.urls')),
     path('', include('posts.urls')),
     path('__debug__/', include(debug_toolbar.urls)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

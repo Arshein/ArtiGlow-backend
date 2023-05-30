@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework.authtoken',
     "debug_toolbar",
     'rest_framework',
     'accounts',
@@ -147,3 +148,6 @@ INTERNAL_IPS = [
 
 OPENAI_API_KEY = env('OPENAI_API_KEY')
 OPENAI_ORGANIZATION = env('OPENAI_ORGANIZATION')
+
+AUTH_USER_MODEL = 'accounts.CustomUser'
+
