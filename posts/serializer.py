@@ -1,20 +1,27 @@
-import urllib
-
-from django.conf import settings
+import os
+import requests
 from django.core.files import File
-from rest_framework.serializers import ModelSerializer
+from django.core.files.temp import NamedTemporaryFile
 from rest_framework import serializers
+from rest_framework.serializers import ModelSerializer
+
 from posts.models import Post, Comment, Like
-from accounts.serializers import UserSerializer
 from .image_resource import gen_image
 
-import requests, uuid, os
-from django.core.files.temp import NamedTemporaryFile
+
+class IsLikedField(serializers.RelatedField):
+    def to_representation(self, value):
+        return {'id': value.id, 'username': value.username}
 
 
 class UserShortField(serializers.RelatedField):
     def to_representation(self, value):
         return {'id': value.id, 'username': value.username}
+
+
+class LikeShortField(serializers.RelatedField):
+    def to_representation(self, value):
+        return {'owner_id': value.owner.id, 'created_at': value.created_at}
 
 
 class LikeSerializer(serializers.ModelSerializer):
@@ -33,22 +40,29 @@ class LikeSerializer(serializers.ModelSerializer):
 
 class PostSerializer(ModelSerializer):
     owner = UserShortField(many=False, read_only=True)
-    likes = LikeSerializer(many=True, read_only=True)
-
-    def __init__(self, args, **kwargs):
-
-        # Don't return emails when listing users
-
-        if kwargs['context']['view'].action == 'list':
-            del self.fields['likes']
-
-        super().__init__(args, **kwargs)
+    likes = LikeShortField(many=True, read_only=True)
+    is_liked = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
         fields = (
-        'id', 'description', 'owner', 'likes', 'likes_count', 'comments_count', 'image', 'created_at', 'updated_at',)
+            'id', 'description', 'owner', 'likes', 'is_liked', 'likes_count', 'comments_count', 'image', 'created_at',
+            'updated_at',)
         read_only_fields = ['id', 'created_at', 'likes', 'image', 'likes_count', 'comments_count', 'updated_at']
+
+    def get_is_liked(self, obj):
+        user = self.context['request'].user
+        likes = []
+        for like in obj.likes.all():
+            likes.append(like.owner.id)
+        if user.is_authenticated and user.id in likes:
+            return True
+        return False
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['is_liked'] = self.get_is_liked(instance)
+        return representation
 
     def create(self, validated_data):
         # set post owner
@@ -84,4 +98,3 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ('id', 'post', 'owner', 'description', 'created_at')
         read_only_fields = ('id', 'created_at', 'post', 'owner')
-
