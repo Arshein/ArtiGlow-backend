@@ -50,7 +50,7 @@ class AccountTests(APITestCase):
 
         url = reverse('login')
         data = {
-            'username': 'tsetset',
+            'username': 'tsetset@gmail.com',
             'password': '123456'
         }
         response = self.client.post(url, data, format='json')
@@ -64,7 +64,7 @@ class AccountTests(APITestCase):
         """
         url = reverse('login')
         data = {
-            'username': 'tsetset',
+            'username': 'tsetset@gmail.com',
             'password': '123456'
         }
         response = self.client.post(url, data, format='json')

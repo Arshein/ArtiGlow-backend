@@ -4,6 +4,7 @@ from django.core.files import File
 from django.core.files.temp import NamedTemporaryFile
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
+from django.contrib.sites.shortcuts import get_current_site
 
 from posts.models import Post, Comment, Like
 from .image_resource import gen_image
@@ -15,8 +16,18 @@ class IsLikedField(serializers.RelatedField):
 
 
 class UserShortField(serializers.RelatedField):
+
     def to_representation(self, value):
-        return {'id': value.id, 'username': value.username}
+        data = {'id': value.id, 'username': value.username}
+        request = self.context.get('request')
+        protocol = self.context.get('protocol', request.scheme if request else 'http')
+        current_site = get_current_site(request)
+        base_url = f"{protocol}://{current_site.domain}" if current_site else ''
+        if value.avatar:
+            data['avatar'] = base_url + value.avatar.url
+        else:
+            data['avatar'] = None
+        return data
 
 
 class LikeShortField(serializers.RelatedField):
@@ -42,11 +53,13 @@ class PostSerializer(ModelSerializer):
     owner = UserShortField(many=False, read_only=True)
     likes = LikeShortField(many=True, read_only=True)
     is_liked = serializers.SerializerMethodField()
+    is_followed = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
         fields = (
-            'id', 'description', 'owner', 'likes', 'is_liked', 'likes_count', 'comments_count', 'image', 'created_at',
+            'id', 'description', 'owner', 'likes', 'is_followed', 'is_liked', 'likes_count', 'comments_count', 'image',
+            'created_at',
             'updated_at',)
         read_only_fields = ['id', 'created_at', 'likes', 'image', 'likes_count', 'comments_count', 'updated_at']
 
@@ -59,9 +72,16 @@ class PostSerializer(ModelSerializer):
             return True
         return False
 
+    def get_is_followed(self, obj):
+        user = self.context['request'].user
+        if user.is_authenticated and obj.owner in user.followings:
+            return True
+        return False
+
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['is_liked'] = self.get_is_liked(instance)
+        representation['is_followed'] = self.get_is_followed(instance)
         return representation
 
     def create(self, validated_data):
