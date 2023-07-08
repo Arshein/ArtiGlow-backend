@@ -74,7 +74,7 @@ class PostSerializer(ModelSerializer):
 
     def get_is_followed(self, obj):
         user = self.context['request'].user
-        if user.is_authenticated and obj.owner in user.followings:
+        if user.is_authenticated and obj.owner in user.following.all():
             return True
         return False
 
