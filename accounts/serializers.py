@@ -1,5 +1,7 @@
+from django.contrib.sites.shortcuts import get_current_site
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+
 User = get_user_model()
 
 from accounts.models import Follow
@@ -7,7 +9,6 @@ from accounts.models import Follow
 
 # User Serializer
 class UserSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = User
         fields = ('id', 'first_name', 'username', 'email')

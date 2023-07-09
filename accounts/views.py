@@ -66,21 +66,23 @@ class UnfollowUserAPIView(APIView):
         else:
             return Response({'message': 'You are not following this user.'}, status=status.HTTP_400_BAD_REQUEST)
 
+
 class UserProfileAPIView(APIView):
     def get(self, request, user_id):
         try:
             user = User.objects.get(pk=user_id)
-            serializer = UserProfileSerializer(user)
+            serializer = UserProfileSerializer(user, context={"request": request})
             return Response(serializer.data, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({'message': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+
 
 class UserProfileUpdateAPIView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
     def patch(self, request):
-        serializer = UserProfileUpdateSerializer(request.user, data=request.data, partial=True)
+        serializer = UserProfileUpdateSerializer(request.user, data=request.data, partial=True, context={"request": request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
