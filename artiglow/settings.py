@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'accounts',
     'knox',
-    'posts'
+    'posts',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -56,6 +57,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
 ]
 
 ROOT_URLCONF = 'artiglow.urls'
@@ -150,4 +153,6 @@ OPENAI_API_KEY = env('OPENAI_API_KEY')
 OPENAI_ORGANIZATION = env('OPENAI_ORGANIZATION')
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
+
+CORS_ALLOW_ALL_ORIGINS = True
 
