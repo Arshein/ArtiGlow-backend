@@ -37,8 +37,16 @@ class LoginAPI(KnoxLoginView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         login(request, user)
+
+        try:
+            user_profile = User.objects.get(pk=user.id)
+        except User.DoesNotExist:
+            response = super(LoginAPI, self).post(request, format=None)
+            response.data['user'] = UserSerializer(user).data
+            return response
+
         response = super(LoginAPI, self).post(request, format=None)
-        response.data['user'] = UserSerializer(user).data
+        response.data['user'] = UserProfileSerializer(user_profile, context={"request": request}).data
         return response
 
 
