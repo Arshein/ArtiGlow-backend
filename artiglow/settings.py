@@ -156,3 +156,6 @@ AUTH_USER_MODEL = 'accounts.CustomUser'
 
 CORS_ALLOW_ALL_ORIGINS = True
 
+REST_KNOX = {
+    'TOKEN_TTL': None,  # will create tokens that never expire
+}
