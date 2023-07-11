@@ -1,5 +1,6 @@
 from django.urls import reverse
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+User = get_user_model()
 from rest_framework.test import APITestCase
 
 
@@ -25,7 +26,7 @@ class AccountTests(APITestCase):
         """
         Ensure we can not create duplicate account object.
         """
-        user = User.objects.create_user('tsetset', 'tsetset@gmail.com', '123456')
+        user = User.objects.create_user('tsetset', 'tsetset2@gmail.com', '123456')
 
         url = reverse('register')
         data = {
@@ -75,4 +76,4 @@ class AccountTests(APITestCase):
                 "Unable to log in with provided credentials."
             ]
         })
-        self.assertTrue('token' in response.data)
+        self.assertFalse('token' in response.data)
