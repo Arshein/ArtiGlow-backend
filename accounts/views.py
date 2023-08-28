@@ -13,6 +13,7 @@ from django.contrib.auth import login
 from rest_framework import permissions
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from knox.views import LoginView as KnoxLoginView
+from django.db.models import Count
 
 
 # Register API
@@ -38,15 +39,9 @@ class LoginAPI(KnoxLoginView):
         user = serializer.validated_data['user']
         login(request, user)
 
-        try:
-            user_profile = User.objects.get(pk=user.id)
-        except User.DoesNotExist:
-            response = super(LoginAPI, self).post(request, format=None)
-            response.data['user'] = UserSerializer(user).data
-            return response
-
         response = super(LoginAPI, self).post(request, format=None)
-        response.data['user'] = UserProfileSerializer(user_profile, context={"request": request}).data
+        user_serializer = UserProfileSerializer if User.objects.filter(pk=user.id).exists() else UserSerializer
+        response.data['user'] = user_serializer(user, context={"request": request}).data
         return response
 
 
@@ -75,10 +70,23 @@ class UnfollowUserAPIView(APIView):
             return Response({'message': 'You are not following this user.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
+# class UserProfileAPIView(APIView):
+#     def get(self, request, user_id):
+#         try:
+#             user = User.objects.get(pk=user_id)
+#             serializer = UserProfileSerializer(user, context={"request": request})
+#             return Response(serializer.data, status=status.HTTP_200_OK)
+#         except User.DoesNotExist:
+#             return Response({'message': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
 class UserProfileAPIView(APIView):
     def get(self, request, user_id):
         try:
-            user = User.objects.get(pk=user_id)
+            # Annotate the user with follower and following counts
+            user = User.objects.annotate(
+                followers_count=Count('followers'),
+                following_count=Count('following')
+            ).get(pk=user_id)
+            
             serializer = UserProfileSerializer(user, context={"request": request})
             return Response(serializer.data, status=status.HTTP_200_OK)
         except User.DoesNotExist:
